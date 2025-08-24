@@ -3,6 +3,7 @@ import TrueFocus from "../Components/Loader/Text/TrueFocus";
 import Lottie from "lottie-react";
 import borderAnimation from "../assets/Chat-Bot.json";
 import GridBackground from "../Components/Background/GridBackground";
+import { ArrowRight } from "lucide-react";
 
 
 const Landing = () => {
@@ -14,7 +15,7 @@ const Landing = () => {
 
 
             <div className="absolute top-0 z-10  h-full flex items-center justify-center">
-                <div className="flex flex-col lg:flex-row gap-10 px-40  text-start font-extrabold text-4xl  md:text-7xl w-full ">
+                <div className="flex flex-col lg:flex-row gap-10 px-60  text-start font-extrabold text-4xl  md:text-7xl w-full ">
 
 
                     <div className="flex-1 mt-10">
@@ -42,12 +43,16 @@ const Landing = () => {
                         </div>
                         <div className="w-full flex justify-start mt-10">
                             <div className="flex gap-4 flex-col sm:flex-row justify-center text-xl">
-                                <button
-                                    className="cursor-pointer animated-border text-[16px]  px-10 py-3 relative text-white rounded-md"
-                                >
-                                    <span>Start Surveillance System</span>
-                                </button>
+                                <a href="/face" className="cursor-pointer">
+                                    <button
 
+                                        className="cursor-pointer animated-border text-[16px]  px-10 py-3 relative text-white rounded-md"
+                                    >
+
+                                        <span className="flex gap-3">Try Now <ArrowRight /></span>
+
+                                    </button>
+                                </a>
                             </div>
                         </div>
                     </div>

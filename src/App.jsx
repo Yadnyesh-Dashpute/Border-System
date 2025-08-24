@@ -1,22 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import Loader from "./Components/Loader/Loader";
 import Landing from "./Pages/Landing";
-import Squares from "./Components/Background/GridBackground";
+import Face from "./Pages/Face";
 
 const App = () => {
-  const [loading, setLoading] = useState(true);
-
   return (
-    <>
+    <Router>
+      <Routes>
 
-      {loading ? (
-        <Loader onEnd={() => setLoading(false)} />
-      ) : (
-        <Landing />
-      )}
+        <Route path="/" element={<Landing />} />
 
-    </>
+
+        <Route path="/face" element={<Face />} />
+      </Routes>
+    </Router>
   );
 };
 
