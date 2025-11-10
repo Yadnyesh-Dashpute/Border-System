@@ -84,7 +84,6 @@ const Face = () => {
             canvasRef.current.getContext('2d').clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
             faceapi.draw.drawDetections(canvasRef.current, resizedDetections);
-            faceapi.draw.drawFaceLandmarks(canvasRef.current, resizedDetections);
 
 
             intervalId = setInterval(async () => {
@@ -100,7 +99,8 @@ const Face = () => {
                         if (!result || !result.detection || !result.detection.box) return;
 
                         const { detection, label = "Unknown", accuracy = 0 } = result;
-                        const color = label === "unknown" ? "red" : "lime";
+                        const color = label === "unknown" && showRedBox ? "red" : "lime";
+
 
                         const drawBox = new faceapi.draw.DrawBox(detection.box, {
                             boxColor: color,
