@@ -189,7 +189,3 @@ body {
     animation: none;
   }
 }
-
-canvas {
-  position: absolute;
-}
