@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as faceapi from "face-api.js";
 import { loadModels, detectFaces } from "../../public/FaceJs/script";
+import Popup from "../Components/Popup";
 
 
 const Face = () => {
+    const [showPopup, setShowPopup] = useState(false);
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const [isCameraActive, setIsCameraActive] = useState(false);
@@ -13,11 +15,28 @@ const Face = () => {
     }, []);
 
     useEffect(() => {
+        const handleAlert = () => {
+            setShowPopup(true);
+        };
+
+        window.addEventListener("unknown-face-detected", handleAlert);
+        return () => window.removeEventListener("unknown-face-detected", handleAlert);
+    }, []);
+
+    const handleClose = () => {
+        setShowPopup(false);
+    };
+
+    const handleConfirm = () => {
+        setShowPopup(false);
+        console.log("User denied notification or closed alert");
+    };
+
+    useEffect(() => {
         if (!isCameraActive) return;
 
         let stream;
         let intervalId;
-
 
         const setupCameraAndFaceAPI = async () => {
             try {
@@ -29,7 +48,6 @@ const Face = () => {
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
 
-                    // Wait for video metadata (width/height ready)
                     await new Promise((resolve) => {
                         videoRef.current.onloadedmetadata = resolve;
                     });
@@ -77,23 +95,32 @@ const Face = () => {
                 const context = canvas.getContext("2d");
                 context.clearRect(0, 0, canvas.width, canvas.height);
 
-                resizedResults.forEach(({ detection, label, accuracy }) => {
-                    const color = label === "unknown" ? "red" : "lime";
-                    const drawBox = new faceapi.draw.DrawBox(detection.box, {
-                        label: `${label} (${(1 - accuracy).toFixed(2)})`,
-                        boxColor: color,
-                        lineWidth: 3,
+                if (resizedResults && resizedResults.length > 0) {
+                    resizedResults.forEach((result) => {
+                        if (!result || !result.detection || !result.detection.box) return;
+
+                        const { detection, label = "Unknown", accuracy = 0 } = result;
+                        const color = label === "unknown" ? "red" : "lime";
+
+                        const drawBox = new faceapi.draw.DrawBox(detection.box, {
+                            boxColor: color,
+                            lineWidth: 3,
+                        });
+
+                        drawBox.draw(canvas);
                     });
-                    drawBox.draw(canvas);
-                });
+                } else {
+                    const ctx = canvas.getContext("2d");
+                    ctx.font = "18px Arial";
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+                    ctx.fillText("No face detected", 20, 40);
+                }
+                ;
             }, 200);
         };
 
         setupCameraAndFaceAPI();
-
-        // ✅ Cleanup on unmount or toggle off
         return () => {
-            console.log("Stopping system and cleaning up...");
             clearInterval(intervalId);
             if (stream) {
                 stream.getTracks().forEach((track) => track.stop());
@@ -167,6 +194,14 @@ const Face = () => {
                         )}
                     </div>
                 </div>
+                {showPopup && <Popup
+                    open={showPopup}
+                    title="Unknown Person Detected!"
+                    subtitle="Security Alert"
+                    message="An unrecognized face has been detected by the camera. Please verify the identity immediately."
+                    onClose={handleClose}
+                    onConfirm={handleConfirm}
+                />}
             </div>
         </div>
     );
