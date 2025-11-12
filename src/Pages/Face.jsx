@@ -67,7 +67,6 @@ const Face = () => {
             const video = videoRef.current;
             if (!canvas || !video) return;
 
-            // Ensure correct dimensions
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
 
@@ -111,8 +110,8 @@ const Face = () => {
                         const text = `${label}`;
 
                         const drawText = new faceapi.draw.DrawTextField(
-                            [text], // It needs an array of text lines
-                            detection.box.topLeft, // Anchor the text to the top-left of the box
+                            [text],
+                            detection.box.topLeft,
                             {
                                 textColor: 'white',
                                 fontSize: 18,
