@@ -99,15 +99,28 @@ const Face = () => {
                         if (!result || !result.detection || !result.detection.box) return;
 
                         const { detection, label = "Unknown", accuracy = 0 } = result;
-                        const color = label === "unknown" && showRedBox ? "red" : "lime";
+                        const color = label === "unknown" ? "red" : "lime";
 
 
                         const drawBox = new faceapi.draw.DrawBox(detection.box, {
                             boxColor: color,
                             lineWidth: 3,
                         });
-
                         drawBox.draw(canvas);
+
+                        const text = `${label}`;
+
+                        const drawText = new faceapi.draw.DrawTextField(
+                            [text], // It needs an array of text lines
+                            detection.box.topLeft, // Anchor the text to the top-left of the box
+                            {
+                                textColor: 'white',
+                                fontSize: 18,
+
+                            }
+                        );
+
+                        drawText.draw(canvas);
                     });
                 } else {
                     const ctx = canvas.getContext("2d");
