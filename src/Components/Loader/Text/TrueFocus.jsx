@@ -66,7 +66,7 @@ const TrueFocus = ({
                     <span
                         key={index}
                         ref={(el) => (wordRefs.current[index] = el)}
-                        className="relative text-[3rem] text-transparent bg-gradient-to-b from-neutral-200 to-neutral-500 bg-clip-text"
+                        className="relative text-[2rem] sm:text-[3rem] text-transparent bg-gradient-to-b from-neutral-200 to-neutral-500 bg-clip-text"
                         style={{
                             filter: manualMode
                                 ? isActive
