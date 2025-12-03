@@ -101,7 +101,7 @@ const Landing = () => {
                     </div>
 
                     <div className=" flex-1">
-                        <div className="flex-1 flex h-full mt-10 justify-center items-center">
+                        <div className="flex-1 flex h-full mt-5 justify-center items-center">
                             <div className="w-80 h-80 flex items-center justify-center rounded-lg">
                                 <Lottie animationData={borderAnimation} loop={true} />
                             </div>
