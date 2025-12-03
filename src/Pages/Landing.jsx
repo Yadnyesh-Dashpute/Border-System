@@ -70,6 +70,7 @@ const Landing = () => {
                     </div>
                 </div>
             </>
+            {/* Mobile Responsive */}
 
             <div className="absolute top-0 z-10 w-full h-full flex items-center justify-center sm:hidden">
                 <div className="flex flex-col lg:flex-row gap-10 px-60 items-center text-center  font-extrabold text-4xl  md:text-7xl w-full ">
@@ -106,7 +107,7 @@ const Landing = () => {
                                 <Lottie animationData={borderAnimation} loop={true} />
                             </div>
                         </div>
-                        <div className="w-full flex justify-center mt-10">
+                        <div className="w-full flex justify-center mt-5">
                             <div className="flex gap-4 flex-col sm:flex-row justify-center text-xl">
                                 <a href="/face" className="cursor-pointer">
                                     <button
