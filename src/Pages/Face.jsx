@@ -219,7 +219,7 @@ const Face = () => {
             </div>
 
             {/* Mobile Responsiveness */}
-            <div className="relative flex flex-col lg:flex-row items-center justify-center min-h-screen overflow-hidden bg-gradient-to-b from-[#0b0c10] via-[#0f1115] to-[#050608] text-white px-4">
+            <div className="relative sm:hidden flex flex-col lg:flex-row items-center justify-center min-h-screen overflow-hidden bg-gradient-to-b from-[#0b0c10] via-[#0f1115] to-[#050608] text-white px-4">
 
                 {/* Grid lines */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#1c1c1c_1px,transparent_1px),linear-gradient(to_bottom,#1c1c1c_1px,transparent_1px)] bg-[size:40px_40px] opacity-40" />
