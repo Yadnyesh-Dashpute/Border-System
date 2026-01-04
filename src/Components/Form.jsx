@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+
 import { ImagePlus, User, Building2, Clock } from "lucide-react";
 import { addUnknownPerson } from "../../public/Services/addUnknownPerson";
 
@@ -10,6 +11,8 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
     const [imagePreview, setImagePreview] = useState(null);
 
     const timestamp = new Date().toLocaleString();
+    const fileInputRef = useRef(null);
+
 
     // ✅ Auto-load detected image
     useEffect(() => {
@@ -74,6 +77,18 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
 
     // ---------------- UI ----------------
 
+    const handleCameraCapture = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setImages([file]); // always array
+        setImagePreview(URL.createObjectURL(file));
+
+        // reset input so same image can be re-selected
+        e.target.value = "";
+    };
+
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
             {/* Backdrop */}
@@ -133,48 +148,45 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
                             <ImagePlus className="w-4 h-4" /> Person Image
                         </label>
 
+                        {/* Hidden Camera Input */}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={handleCameraCapture}
+                        />
+
                         {imagePreview ? (
                             <div className="space-y-2">
                                 <img
                                     src={imagePreview}
-                                    alt="Detected Face"
+                                    alt="Person"
                                     className="w-full h-48 object-cover rounded-lg border border-gray-700"
                                 />
                                 <p className="text-xs text-green-400">
-                                    Captured automatically from camera
+                                    Captured from camera
                                 </p>
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setImagePreview(null);
-                                        setImages([]);
-                                    }}
+                                    onClick={() => fileInputRef.current.click()}
                                     className="text-xs text-cyan-400 hover:underline"
                                 >
                                     Replace image
                                 </button>
                             </div>
                         ) : (
-                            <>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    id="manualUpload"
-                                    onChange={handleManualImageChange}
-                                    className="hidden"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        document.getElementById("manualUpload").click()
-                                    }
-                                    className="w-full py-2 rounded-md bg-gray-700 text-sm text-white hover:bg-gray-600"
-                                >
-                                    Upload Image
-                                </button>
-                            </>
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current.click()}
+                                className="w-full py-2 rounded-md bg-gray-700 text-sm text-white hover:bg-gray-600"
+                            >
+                                Capture Image
+                            </button>
                         )}
                     </div>
+
 
                     {/* Timestamp */}
                     <div className="mb-6">
