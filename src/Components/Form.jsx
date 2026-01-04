@@ -2,19 +2,27 @@ import React, { useState, useEffect, useRef } from "react";
 
 import { ImagePlus, User, Building2, Clock } from "lucide-react";
 import { addUnknownPerson } from "../../public/Services/addUnknownPerson";
+import { toastSuccess, toastError } from "./ToastifyComponent";
 
 export default function Form({ open, onClose, onSubmit, detectedImage }) {
-    // ✅ MATCHING FIREBASE FIELDS
-    const [title, setTitle] = useState("");           // Person Name
-    const [description, setDescription] = useState(""); // Department
-    const [images, setImages] = useState([]);         // ARRAY
+
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
+    const [images, setImages] = useState([]);
     const [imagePreview, setImagePreview] = useState(null);
 
-    const timestamp = new Date().toLocaleString();
+    const timestamp = new Date().toLocaleString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+    });
     const fileInputRef = useRef(null);
 
 
-    // ✅ Auto-load detected image
     useEffect(() => {
         if (!detectedImage) return;
 
@@ -27,7 +35,6 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
                     type: "image/jpeg",
                 });
 
-                // store as array (important)
                 setImages([file]);
             })
             .catch(console.error);
@@ -35,7 +42,6 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
 
     if (!open) return null;
 
-    // ---------------- Helpers ----------------
 
     const resetForm = () => {
         setTitle("");
@@ -48,13 +54,13 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
         const file = e.target.files[0];
         if (!file) return;
 
-        setImages([file]); // ✅ always array
+        setImages([file]);
         setImagePreview(URL.createObjectURL(file));
     };
 
     const handleSubmit = async () => {
         if (!title || !description || images.length === 0) {
-            alert("Please fill all fields");
+            toastError("Please fill all fields");
             return;
         }
 
@@ -62,36 +68,34 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
             await addUnknownPerson({
                 title,
                 description,
-                images,      // ARRAY
+                images,
                 timestamp,
             });
-
+            toastSuccess("Person details saved successfully");
             resetForm();
             onSubmit?.();
             onClose();
         } catch (err) {
             console.error(err);
-            alert("Failed to save unknown person");
+            toastError("Failed to save unknown person");
+
         }
     };
 
-    // ---------------- UI ----------------
 
     const handleCameraCapture = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        setImages([file]); // always array
+        setImages([file]);
         setImagePreview(URL.createObjectURL(file));
 
-        // reset input so same image can be re-selected
         e.target.value = "";
     };
 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-            {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                 onClick={() => {
@@ -103,7 +107,6 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
             <div className="relative z-10 w-full max-w-lg">
                 <div className="rounded-2xl border border-gray-700/60 bg-gradient-to-b from-gray-900/80 to-gray-900/60 p-6 shadow-2xl">
 
-                    {/* Header */}
                     <div className="mb-5">
                         <div className="text-xs font-semibold text-gray-400 uppercase">
                             Border Surveillance System
@@ -116,7 +119,6 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
                         </p>
                     </div>
 
-                    {/* Person Name */}
                     <div className="mb-4">
                         <label className="text-sm text-gray-300 flex items-center gap-2 mb-1">
                             <User className="w-4 h-4" /> Person Name
@@ -129,7 +131,6 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
                         />
                     </div>
 
-                    {/* Department */}
                     <div className="mb-4">
                         <label className="text-sm text-gray-300 flex items-center gap-2 mb-1">
                             <Building2 className="w-4 h-4" /> Department
@@ -142,13 +143,11 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
                         />
                     </div>
 
-                    {/* Image Section */}
                     <div className="mb-4">
                         <label className="text-sm text-gray-300 flex items-center gap-2 mb-2">
                             <ImagePlus className="w-4 h-4" /> Person Image
                         </label>
 
-                        {/* Hidden Camera Input */}
                         <input
                             type="file"
                             accept="image/*"
@@ -188,7 +187,6 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
                     </div>
 
 
-                    {/* Timestamp */}
                     <div className="mb-6">
                         <label className="text-sm text-gray-300 flex items-center gap-2 mb-1">
                             <Clock className="w-4 h-4" /> Timestamp
@@ -200,7 +198,6 @@ export default function Form({ open, onClose, onSubmit, detectedImage }) {
                         />
                     </div>
 
-                    {/* Actions */}
                     <div className="flex gap-3">
                         <button
                             onClick={() => {

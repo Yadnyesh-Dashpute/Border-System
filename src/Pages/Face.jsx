@@ -3,6 +3,9 @@ import * as faceapi from "face-api.js";
 import { loadModels, detectFaces, resetUnknownLock } from "../../public/FaceJs/script";
 import Popup from "../Components/Popup";
 import Form from "../Components/Form";
+import { sendIntruderAlert } from "../../public/Services/emailService";
+import { uploadToCloudinary } from "../../public/Services/uploadToCloudinary";
+import { toastSuccess, toastError } from "./ToastifyComponent";
 
 
 
@@ -30,13 +33,24 @@ const Face = () => {
             setDetectedImage(e.detail.image);
             setShowPopup(true);
 
-            unknownAlarmRef.current = new Audio("/sounds/unknown-alert.mp3");
-            unknownAlarmRef.current.play().catch(() => { });
+            unknownAlarmRef.current = new Audio("/unknown-person.mp3");
+            unknownAlarmRef.current.loop = true;
+            unknownAlarmRef.current.volume = 0.8;
+
+            unknownAlarmRef.current.play().catch(() => {
+                console.warn("Unknown alarm blocked until user interaction");
+            });
         };
 
         window.addEventListener("unknown-face-detected", handleAlert);
         return () => window.removeEventListener("unknown-face-detected", handleAlert);
     }, []);
+
+    const base64ToFile = async (base64, filename = "intruder.jpg") => {
+        const res = await fetch(base64);
+        const blob = await res.blob();
+        return new File([blob], filename, { type: "image/jpeg" });
+    };
 
 
     const handleClose = () => {
@@ -69,26 +83,60 @@ const Face = () => {
 
 
 
-    const handleDisallow = () => {
+    const handleDisallow = async () => {
         setShowPopup(false);
 
         unknownAlarmRef.current?.pause();
+        unknownAlarmRef.current.currentTime = 0;
 
         criticalAlarmRef.current = new Audio("/alert-sound.mp3");
         criticalAlarmRef.current.play().catch(() => { });
 
-        setTimeout(() => {
-            resetUnknownLock();
-        }, 1000);
+        const timestamp = new Date().toLocaleString("en-IN", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+        });
 
+
+        try {
+            if (!detectedImage) {
+                console.warn("No intruder image available");
+                resetUnknownLock();
+                return;
+            }
+
+
+            const file = await base64ToFile(detectedImage);
+
+
+            const imageUrl = await uploadToCloudinary(file);
+
+
+            await sendIntruderAlert({
+                imageUrl,
+                timestamp,
+            });
+
+            toastSuccess("Intruder alert email sent");
+        } catch (err) {
+            toastError("Failed to send intruder alert", err);
+        }
+
+
+
+        resetUnknownLock();
     };
-
 
 
     const handleConfirm = () => {
         setShowPopup(false);
         setShowForm(true);
-        console.log("User denied notification or closed alert");
+        toastSuccess("User denied notification or closed alert");
 
         alarmRef.current = new Audio("/alert-sound.mp3");
         alarmRef.current.play().catch(() => {
@@ -219,7 +267,6 @@ const Face = () => {
                 <div className="absolute lg:w-[600px] lg:h-[600px] md:w-[450px] md:h-[450px] w-[350px] h-[350px]  rounded-full bg-cyan-500/10 blur-3xl lg:bottom-[-150px] lg:right-[-200px] bottom-[-100px] right-[-150px]" />
 
 
-                {/* Text Content Wrapper */}
 
                 <div className="relative z-10 gap-10 sm:flex flex flex-col-reverse items-center sm:flex-col lg:flex-row sm:items-center px-2  lg:text-left  sm:max-w-full text-center sm:mr-6 ">
                     <div className="h-full hidden sm:block w-[600px] bg-gradient-to-b from-green-200 to-cyan-400 bg-clip-text py-8 text-xl font-extrabold text-transparent sm:text-6xl">
@@ -245,7 +292,6 @@ const Face = () => {
                         </button>
                     </div>
 
-                    {/* Mobile Responsiveness Text */}
 
                     <div className="text-center sm:hidden  lg:text-left w-full max-w-[450px] px-2">
                         <h1 className="bg-gradient-to-b from-green-200 to-cyan-400 bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold">
@@ -266,13 +312,11 @@ const Face = () => {
                         </button>
                     </div>
 
-                    {/* Video Div */}
 
                     <div className="sm:w-[700px] w-full max-w-[300px] sm:h-full h-[300px] sm:max-w-none 
                 aspect-video relative flex items-center justify-center">
                         <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-gray-600/50">
 
-                            {/* Camera Active */}
                             {isCameraActive && (
                                 <>
                                     <video
@@ -288,7 +332,6 @@ const Face = () => {
                                 </>
                             )}
 
-                            {/* Fallback Video */}
                             {!isCameraActive && (
                                 <video
                                     src="/Loader/face.mp4"
