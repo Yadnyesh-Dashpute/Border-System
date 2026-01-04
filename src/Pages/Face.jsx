@@ -1,13 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as faceapi from "face-api.js";
-import { loadModels, detectFaces } from "../../public/FaceJs/script";
+import { loadModels, detectFaces, resetUnknownLock } from "../../public/FaceJs/script";
 import Popup from "../Components/Popup";
+import Form from "../Components/Form";
+
 
 
 const Face = () => {
     const [showPopup, setShowPopup] = useState(false);
+    const [showForm, setShowForm] = useState(false);
+    const [detectedImage, setDetectedImage] = useState(null);
+    const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+
+
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+    const alarmRef = useRef(null);
+    const unknownAlarmRef = useRef(null);
+    const criticalAlarmRef = useRef(null);
+
     const [isCameraActive, setIsCameraActive] = useState(false);
 
     useEffect(() => {
@@ -15,21 +26,75 @@ const Face = () => {
     }, []);
 
     useEffect(() => {
-        const handleAlert = () => {
+        const handleAlert = (e) => {
+            setDetectedImage(e.detail.image);
             setShowPopup(true);
+
+            unknownAlarmRef.current = new Audio("/sounds/unknown-alert.mp3");
+            unknownAlarmRef.current.play().catch(() => { });
         };
 
         window.addEventListener("unknown-face-detected", handleAlert);
         return () => window.removeEventListener("unknown-face-detected", handleAlert);
     }, []);
 
+
     const handleClose = () => {
         setShowPopup(false);
+
+        if (alarmRef.current) {
+            alarmRef.current.pause();
+            alarmRef.current.currentTime = 0;
+        }
     };
+
+    const handleAllow = () => {
+        setShowPopup(false);
+        setShowSaveConfirm(true);
+
+        unknownAlarmRef.current?.pause();
+        unknownAlarmRef.current.currentTime = 0;
+    };
+
+    const handleSaveYes = () => {
+        setShowSaveConfirm(false);
+        setShowForm(true);
+    };
+
+    const handleSaveNo = () => {
+        setShowSaveConfirm(false);
+
+        resetUnknownLock();
+    };
+
+
+
+    const handleDisallow = () => {
+        setShowPopup(false);
+
+        unknownAlarmRef.current?.pause();
+
+        criticalAlarmRef.current = new Audio("/alert-sound.mp3");
+        criticalAlarmRef.current.play().catch(() => { });
+
+        setTimeout(() => {
+            resetUnknownLock();
+        }, 1000);
+
+    };
+
+
 
     const handleConfirm = () => {
         setShowPopup(false);
+        setShowForm(true);
         console.log("User denied notification or closed alert");
+
+        alarmRef.current = new Audio("/alert-sound.mp3");
+        alarmRef.current.play().catch(() => {
+            console.warn("Audio blocked until user interaction");
+        });
+        resetUnknownLock();
     };
 
     useEffect(() => {
@@ -237,14 +302,45 @@ const Face = () => {
                         </div>
                     </div>
 
-                    {showPopup && <Popup
-                        open={showPopup}
-                        title="Unknown Person Detected!"
-                        subtitle="Security Alert"
-                        message="An unrecognized face has been detected by the camera. Please verify the identity immediately."
-                        onClose={handleClose}
-                        onConfirm={handleConfirm}
-                    />}
+                    {showPopup && (
+                        <Popup
+                            open={showPopup}
+                            title="Unknown Person Detected!"
+                            subtitle="Security Alert"
+                            message="An unrecognized face has been detected by the camera. Please verify the identity immediately."
+                            onClose={handleClose}
+                            onAllow={handleAllow}
+                            onDisallow={handleDisallow}
+                            onConfirm={handleConfirm}
+                        />
+                    )}
+
+                    {showSaveConfirm && (
+                        <Popup
+                            open={showSaveConfirm}
+                            title="Save Person Details?"
+                            subtitle="Optional Action"
+                            message="Do you want to save this person's details for future recognition?"
+                            onAllow={handleSaveYes}
+                            onDisallow={handleSaveNo}
+                            onClose={handleSaveNo}
+                        />
+                    )}
+
+
+                    <Form
+                        open={showForm}
+                        detectedImage={detectedImage}
+                        onClose={() => {
+                            setShowForm(false);
+                            resetUnknownLock();
+                        }}
+                        onSubmit={() => {
+                            setShowForm(false);
+                            resetUnknownLock();
+                        }}
+                    />
+
                 </div>
             </div>
 
